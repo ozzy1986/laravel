@@ -209,7 +209,7 @@ class TaskCrudTest extends TestCase
         $response->assertOk();
     }
 
-    // ── Search by title ─────────────────────────────────────
+    // ── Search by title or description ──────────────────────
 
     public function test_index_searches_by_title(): void
     {
@@ -221,6 +221,24 @@ class TaskCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('Buy groceries');
         $response->assertDontSee('Deploy server');
+    }
+
+    public function test_index_searches_by_description(): void
+    {
+        Task::factory()->create([
+            'title'       => 'Alpha',
+            'description' => 'Уникальная фраза для поиска по описанию',
+        ]);
+        Task::factory()->create([
+            'title'       => 'Beta',
+            'description' => 'Другое содержимое',
+        ]);
+
+        $response = $this->get(route('tasks.index', ['search' => 'Уникальная фраза']));
+
+        $response->assertOk();
+        $response->assertSee('Alpha');
+        $response->assertDontSee('Beta');
     }
 
     public function test_ajax_index_returns_partial_html_for_live_filters(): void

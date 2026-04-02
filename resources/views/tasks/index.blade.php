@@ -26,7 +26,7 @@
                 type="text"
                 name="search"
                 value="{{ $filters['search'] ?? '' }}"
-                placeholder="Найти по названию"
+                placeholder="Найти по названию или описанию"
                 autocomplete="off"
             >
 

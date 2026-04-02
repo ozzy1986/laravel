@@ -35,7 +35,12 @@ class Task extends Model
         $term = trim((string) $term);
 
         if ($term !== '') {
-            $query->where('title', 'like', '%' . $term . '%');
+            $like = '%' . $term . '%';
+
+            $query->where(function (Builder $inner) use ($like): void {
+                $inner->where('title', 'like', $like)
+                    ->orWhere('description', 'like', $like);
+            });
         }
 
         return $query;
