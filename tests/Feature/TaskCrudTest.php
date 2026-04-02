@@ -35,7 +35,7 @@ class TaskCrudTest extends TestCase
     public function test_index_shows_description_excerpt_when_available(): void
     {
         Task::factory()->create([
-            'title' => 'Quoted task',
+            'title'       => 'Quoted task',
             'description' => 'Это достаточно длинное описание, чтобы убедиться, что в списке задач появляется короткая цитата из текста.',
         ]);
 
@@ -81,6 +81,7 @@ class TaskCrudTest extends TestCase
         $response = $this->post(route('tasks.store'), $data);
 
         $response->assertRedirect(route('tasks.index'));
+        $response->assertSessionHas('success', 'Задача создана.');
         $this->assertDatabaseHas('tasks', ['title' => 'Test task title']);
     }
 
@@ -125,6 +126,11 @@ class TaskCrudTest extends TestCase
         $this->get(route('tasks.edit', $task))->assertOk();
     }
 
+    public function test_edit_returns_404_for_missing_task(): void
+    {
+        $this->get(route('tasks.edit', 999))->assertNotFound();
+    }
+
     public function test_update_modifies_task_and_redirects(): void
     {
         $task = Task::factory()->create(['title' => 'Old title']);
@@ -136,6 +142,7 @@ class TaskCrudTest extends TestCase
         ]);
 
         $response->assertRedirect(route('tasks.show', $task));
+        $response->assertSessionHas('success', 'Задача обновлена.');
         $this->assertDatabaseHas('tasks', [
             'id'     => $task->id,
             'title'  => 'New title',
@@ -145,7 +152,7 @@ class TaskCrudTest extends TestCase
 
     public function test_update_fails_without_title(): void
     {
-        $task = Task::factory()->create();
+        $task = Task::factory()->create(['title' => 'Original']);
 
         $response = $this->put(route('tasks.update', $task), [
             'title'  => '',
@@ -153,6 +160,28 @@ class TaskCrudTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('title');
+        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'title' => 'Original']);
+    }
+
+    public function test_update_fails_with_invalid_status(): void
+    {
+        $task = Task::factory()->create(['status' => 'new']);
+
+        $response = $this->put(route('tasks.update', $task), [
+            'title'  => $task->title,
+            'status' => 'bogus',
+        ]);
+
+        $response->assertSessionHasErrors('status');
+        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'status' => 'new']);
+    }
+
+    public function test_update_returns_404_for_missing_task(): void
+    {
+        $this->put(route('tasks.update', 999), [
+            'title'  => 'Title',
+            'status' => 'new',
+        ])->assertNotFound();
     }
 
     // ── Destroy ─────────────────────────────────────────────
@@ -164,7 +193,13 @@ class TaskCrudTest extends TestCase
         $response = $this->delete(route('tasks.destroy', $task));
 
         $response->assertRedirect(route('tasks.index'));
+        $response->assertSessionHas('success', 'Задача удалена.');
         $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+    }
+
+    public function test_destroy_returns_404_for_missing_task(): void
+    {
+        $this->delete(route('tasks.destroy', 999))->assertNotFound();
     }
 
     // ── Status change ───────────────────────────────────────
@@ -202,14 +237,17 @@ class TaskCrudTest extends TestCase
 
     public function test_index_ignores_invalid_filter_status(): void
     {
-        Task::factory()->count(2)->create();
+        Task::factory()->create(['title' => 'Visible A']);
+        Task::factory()->create(['title' => 'Visible B']);
 
         $response = $this->get(route('tasks.index', ['status' => 'bogus']));
 
         $response->assertOk();
+        $response->assertSee('Visible A');
+        $response->assertSee('Visible B');
     }
 
-    // ── Search by title or description ──────────────────────
+    // ── Search by title ─────────────────────────────────────
 
     public function test_index_searches_by_title(): void
     {
@@ -223,39 +261,70 @@ class TaskCrudTest extends TestCase
         $response->assertDontSee('Deploy server');
     }
 
-    public function test_index_searches_by_description(): void
+    public function test_index_search_does_not_match_description(): void
     {
         Task::factory()->create([
             'title'       => 'Alpha',
             'description' => 'Уникальная фраза для поиска по описанию',
         ]);
-        Task::factory()->create([
-            'title'       => 'Beta',
-            'description' => 'Другое содержимое',
-        ]);
+        Task::factory()->create(['title' => 'Beta']);
 
         $response = $this->get(route('tasks.index', ['search' => 'Уникальная фраза']));
 
         $response->assertOk();
-        $response->assertSee('Alpha');
-        $response->assertDontSee('Beta');
+        $response->assertDontSee('Alpha');
     }
 
-    public function test_ajax_index_returns_partial_html_for_live_filters(): void
+    // ── AJAX index ──────────────────────────────────────────
+
+    public function test_ajax_index_returns_partial_html_for_search(): void
     {
         Task::factory()->create(['title' => 'Buy groceries']);
         Task::factory()->create(['title' => 'Deploy server']);
 
         $response = $this->get(route('tasks.index', ['search' => 'groceries']), [
-            'Accept' => 'application/json',
+            'Accept'           => 'application/json',
             'X-Requested-With' => 'XMLHttpRequest',
         ]);
 
         $response->assertOk();
         $response->assertJsonStructure(['html', 'total']);
-
         $this->assertStringContainsString('Buy groceries', $response->json('html'));
         $this->assertStringNotContainsString('Deploy server', $response->json('html'));
+    }
+
+    public function test_ajax_index_filters_by_status(): void
+    {
+        Task::factory()->create(['title' => 'Task A', 'status' => 'new']);
+        Task::factory()->create(['title' => 'Task B', 'status' => 'done']);
+
+        $response = $this->get(route('tasks.index', ['status' => 'done']), [
+            'Accept'           => 'application/json',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ]);
+
+        $response->assertOk();
+        $this->assertStringContainsString('Task B', $response->json('html'));
+        $this->assertStringNotContainsString('Task A', $response->json('html'));
+        $this->assertSame(1, $response->json('total'));
+    }
+
+    public function test_ajax_index_combines_search_and_status(): void
+    {
+        Task::factory()->create(['title' => 'Buy milk', 'status' => 'new']);
+        Task::factory()->create(['title' => 'Buy bread', 'status' => 'done']);
+        Task::factory()->create(['title' => 'Fix bug', 'status' => 'new']);
+
+        $response = $this->get(route('tasks.index', ['search' => 'Buy', 'status' => 'new']), [
+            'Accept'           => 'application/json',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ]);
+
+        $response->assertOk();
+        $this->assertStringContainsString('Buy milk', $response->json('html'));
+        $this->assertStringNotContainsString('Buy bread', $response->json('html'));
+        $this->assertStringNotContainsString('Fix bug', $response->json('html'));
+        $this->assertSame(1, $response->json('total'));
     }
 
     // ── Pagination ──────────────────────────────────────────
@@ -264,7 +333,7 @@ class TaskCrudTest extends TestCase
     {
         foreach (range(1, 7) as $number) {
             Task::factory()->create([
-                'title' => "Task {$number}",
+                'title'      => "Task {$number}",
                 'created_at' => now()->subMinutes(8 - $number),
                 'updated_at' => now()->subMinutes(8 - $number),
             ]);
@@ -275,6 +344,24 @@ class TaskCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('Task 7');
         $response->assertDontSee('Task 1');
+        $response->assertSee('page=2');
+    }
+
+    public function test_pagination_preserves_query_string(): void
+    {
+        foreach (range(1, 7) as $number) {
+            Task::factory()->create([
+                'title'      => "Filter {$number}",
+                'status'     => 'new',
+                'created_at' => now()->subMinutes(8 - $number),
+                'updated_at' => now()->subMinutes(8 - $number),
+            ]);
+        }
+
+        $response = $this->get(route('tasks.index', ['status' => 'new']));
+
+        $response->assertOk();
+        $response->assertSee('status=new');
         $response->assertSee('page=2');
     }
 
@@ -309,6 +396,17 @@ class TaskCrudTest extends TestCase
         $this->assertDatabaseHas('tasks', ['title' => 'Clean title']);
     }
 
+    public function test_store_normalizes_whitespace_only_description_to_null(): void
+    {
+        $this->post(route('tasks.store'), [
+            'title'       => 'Title',
+            'description' => '   ',
+            'status'      => 'new',
+        ]);
+
+        $this->assertDatabaseHas('tasks', ['title' => 'Title', 'description' => null]);
+    }
+
     public function test_store_fails_with_whitespace_only_title(): void
     {
         $response = $this->post(route('tasks.store'), [
@@ -340,6 +438,18 @@ class TaskCrudTest extends TestCase
         ]);
 
         $response = $this->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSee('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;', false);
+    }
+
+    public function test_xss_payload_in_title_is_escaped_on_show(): void
+    {
+        $task = Task::factory()->create([
+            'title' => '<script>alert("xss")</script>',
+        ]);
+
+        $response = $this->get(route('tasks.show', $task));
 
         $response->assertOk();
         $response->assertSee('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;', false);

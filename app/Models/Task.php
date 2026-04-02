@@ -38,10 +38,7 @@ class Task extends Model
             $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term);
             $like = '%' . $escaped . '%';
 
-            $query->where(function (Builder $inner) use ($like): void {
-                $inner->whereRaw('title LIKE ? ESCAPE ?', [$like, '\\'])
-                    ->orWhereRaw('description LIKE ? ESCAPE ?', [$like, '\\']);
-            });
+            $query->whereRaw('title LIKE ? ESCAPE ?', [$like, '\\']);
         }
 
         return $query;

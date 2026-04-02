@@ -23,10 +23,10 @@
 
             <div class="task-actions">
                 <a href="{{ route('tasks.edit', $task) }}" class="btn btn-secondary">Редактировать</a>
-                <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Удалить задачу?')">
+                <form method="POST" action="{{ route('tasks.destroy', $task) }}">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Удалить</button>
+                    <button type="submit" class="btn btn-danger" data-confirm="Удалить задачу «{{ $task->title }}»?">Удалить</button>
                 </form>
                 <a href="{{ route('tasks.index') }}" class="btn btn-secondary">К списку</a>
             </div>

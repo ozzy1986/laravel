@@ -16,7 +16,8 @@ class TaskRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'title' => is_string($this->title) ? trim($this->title) : $this->title,
+            'title'       => is_string($this->title) ? trim($this->title) : $this->title,
+            'description' => is_string($this->description) ? trim($this->description) ?: null : $this->description,
         ]);
     }
 

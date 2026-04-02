@@ -29,9 +29,9 @@ class TaskController extends Controller
             'filters'  => $request->only(['status', 'search']),
         ];
 
-        if ($request->ajax()) {
+        if ($request->ajax() && $request->wantsJson()) {
             return response()->json([
-                'html' => view('tasks._results', $viewData)->render(),
+                'html'  => view('tasks._results', $viewData)->render(),
                 'total' => $tasks->total(),
             ]);
         }

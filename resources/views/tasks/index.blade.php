@@ -18,22 +18,29 @@
         </div>
 
         <form method="GET" action="{{ route('tasks.index') }}" class="toolbar" data-task-filters>
-            <input
-                type="text"
-                name="search"
-                value="{{ $filters['search'] ?? '' }}"
-                placeholder="Найти по названию или описанию"
-                autocomplete="off"
-            >
+            <div>
+                <label for="filter-search" class="sr-only">Поиск по названию</label>
+                <input
+                    type="text"
+                    id="filter-search"
+                    name="search"
+                    value="{{ $filters['search'] ?? '' }}"
+                    placeholder="Найти по названию"
+                    autocomplete="off"
+                >
+            </div>
 
-            <select name="status">
-                <option value="">Все статусы</option>
-                @foreach($statuses as $status)
-                    <option value="{{ $status->value }}" @selected(($filters['status'] ?? '') === $status->value)>
-                        {{ $status->label() }}
-                    </option>
-                @endforeach
-            </select>
+            <div>
+                <label for="filter-status" class="sr-only">Фильтр по статусу</label>
+                <select id="filter-status" name="status">
+                    <option value="">Все статусы</option>
+                    @foreach($statuses as $status)
+                        <option value="{{ $status->value }}" @selected(($filters['status'] ?? '') === $status->value)>
+                            {{ $status->label() }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
             <button type="submit" class="btn btn-secondary btn-sm">Применить</button>
 
@@ -63,8 +70,8 @@
                 return;
             }
 
-            const searchInput = form.querySelector('input[name="search"]');
-            const statusSelect = form.querySelector('select[name="status"]');
+            const searchInput = form.querySelector('#filter-search');
+            const statusSelect = form.querySelector('#filter-status');
             const resetLink = form.querySelector('[data-reset-filters]');
             let debounceTimer = null;
             let statusTimer = null;
@@ -137,7 +144,7 @@
 
                 requestController = new AbortController();
 
-                setLoadingState(true, '');
+                setLoadingState(true, 'Загрузка…');
 
                 fetch(urlString, {
                     headers: {
@@ -160,8 +167,14 @@
                         }
                         window.history.replaceState({}, '', urlString);
                         syncResetLinkState();
-                        setLoadingState(false, '');
+                        setLoadingState(false, 'Обновлено');
                         scheduleStatusClear();
+
+                        const focusTarget = results.querySelector('.results-summary, .empty-state');
+                        if (focusTarget) {
+                            focusTarget.setAttribute('tabindex', '-1');
+                            focusTarget.focus({ preventScroll: true });
+                        }
                     })
                     .catch((error) => {
                         if (error.name === 'AbortError') {

@@ -30,29 +30,60 @@
 @endforelse
 
 @if($tasks->hasPages())
+    @php
+        $current  = $tasks->currentPage();
+        $last     = $tasks->lastPage();
+        $side     = 2;
+        $urls     = $tasks->getUrlRange(1, $last);
+
+        $from = max(2, $current - $side);
+        $to   = min($last - 1, $current + $side);
+
+        $pages = collect();
+        $pages->push(1);
+
+        if ($from > 2) {
+            $pages->push(null);
+        }
+
+        for ($i = $from; $i <= $to; $i++) {
+            $pages->push($i);
+        }
+
+        if ($to < $last - 1) {
+            $pages->push(null);
+        }
+
+        if ($last > 1) {
+            $pages->push($last);
+        }
+    @endphp
+
     <p class="pagination-summary">
-        {{ $tasks->currentPage() }} / {{ $tasks->lastPage() }}
+        {{ $current }} / {{ $last }}
     </p>
 
     <nav class="pagination-wrap" aria-label="Страницы">
         @if($tasks->onFirstPage())
-            <span class="disabled">&laquo;</span>
+            <span class="disabled" aria-disabled="true" aria-label="Предыдущая страница">&laquo;</span>
         @else
-            <a href="{{ $tasks->previousPageUrl() }}" rel="prev">&laquo;</a>
+            <a href="{{ $tasks->previousPageUrl() }}" rel="prev" aria-label="Предыдущая страница">&laquo;</a>
         @endif
 
-        @foreach($tasks->getUrlRange(1, $tasks->lastPage()) as $page => $url)
-            @if($page === $tasks->currentPage())
-                <span class="active">{{ $page }}</span>
+        @foreach($pages as $page)
+            @if(is_null($page))
+                <span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>
+            @elseif($page === $current)
+                <span class="active" aria-current="page">{{ $page }}</span>
             @else
-                <a href="{{ $url }}">{{ $page }}</a>
+                <a href="{{ $urls[$page] }}">{{ $page }}</a>
             @endif
         @endforeach
 
         @if($tasks->hasMorePages())
-            <a href="{{ $tasks->nextPageUrl() }}" rel="next">&raquo;</a>
+            <a href="{{ $tasks->nextPageUrl() }}" rel="next" aria-label="Следующая страница">&raquo;</a>
         @else
-            <span class="disabled">&raquo;</span>
+            <span class="disabled" aria-disabled="true" aria-label="Следующая страница">&raquo;</span>
         @endif
     </nav>
 @endif

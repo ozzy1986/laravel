@@ -1,6 +1,6 @@
 # Планировщик задач (Laravel)
 
-Веб-приложение «список задач» на русском языке: CRUD, статусы, поиск по названию и описанию, фильтр по статусу, пагинация. Интерфейс — Blade + встроенные стили в layout, без отдельного SPA.
+Веб-приложение «список задач» на русском языке: CRUD, статусы, поиск по названию, фильтр по статусу, пагинация. Интерфейс — Blade + встроенные стили в layout, без отдельного SPA.
 
 ## Стек
 
@@ -15,14 +15,14 @@
 | [`routes/web.php`](routes/web.php) | Маршруты: редирект `/` → `/tasks`, ресурс `tasks` (все действия CRUD). |
 | [`app/Http/Controllers/TaskController.php`](app/Http/Controllers/TaskController.php) | Список (фильтр, поиск, пагинация 6 на страницу), создание/просмотр/редактирование/удаление. Для AJAX-запросов к индексу (`X-Requested-With: XMLHttpRequest`, `Accept: application/json`) возвращает JSON `{ html, total }` — HTML фрагмента списка без полной перезагрузки. |
 | [`app/Http/Requests/TaskRequest.php`](app/Http/Requests/TaskRequest.php) | Общая валидация для `store` и `update` (title, description, status). |
-| [`app/Models/Task.php`](app/Models/Task.php) | Модель задачи; скоупы `filterStatus`, `search` (заголовок **или** описание); метод `excerpt()` для превью в списке. |
+| [`app/Models/Task.php`](app/Models/Task.php) | Модель задачи; скоупы `filterStatus`, `search` (по названию); метод `excerpt()` для превью в списке. |
 | [`app/Enums/TaskStatus.php`](app/Enums/TaskStatus.php) | Статусы: `new`, `in_progress`, `done` — подписи для UI, классы чипов, класс цветной полоски карточки. |
 | [`database/migrations/`](database/migrations) | Таблица `tasks` и стандартные миграции Laravel. |
 | [`database/factories/TaskFactory.php`](database/factories/TaskFactory.php) | Фабрика для тестов и сидов. |
 | [`resources/views/layouts/app.blade.php`](resources/views/layouts/app.blade.php) | Общий layout: шапка, стили, футер, стек `@stack('scripts')`. |
 | [`resources/views/tasks/`](resources/views/tasks) | Страницы: `index`, `create`, `edit`, `show`, частичные `_form`, `_results` (только тело списка + пагинация для AJAX). |
 | [`public/favicon.png`](public/favicon.png) | Иконка сайта. |
-| [`tests/Feature/TaskCrudTest.php`](tests/Feature/TaskCrudTest.php) | Основные сценарии: CRUD, валидация, фильтр, поиск (в т.ч. по описанию), AJAX-индекс, пагинация. |
+| [`tests/Feature/TaskCrudTest.php`](tests/Feature/TaskCrudTest.php) | Основные сценарии: CRUD, валидация, фильтр, поиск по названию, AJAX-индекс, пагинация. |
 
 Пользователи Laravel по умолчанию (`User`) в миграциях есть, в этом приложении **не используются** (нет авторизации).
 

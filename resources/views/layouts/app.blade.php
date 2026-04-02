@@ -112,6 +112,20 @@
 
         .brand-title a {
             text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .brand-logo {
+            height: 2.6rem;
+            width: auto;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-title a:hover .brand-logo {
+            transform: rotate(-8deg) scale(1.08);
         }
 
         main {
@@ -600,6 +614,76 @@
             gap: 0.5rem;
         }
 
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .pagination-ellipsis {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.6rem;
+            min-height: 2.6rem;
+            color: var(--ink-muted);
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            pointer-events: none;
+        }
+
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(25, 22, 19, 0.45);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.16s ease;
+        }
+
+        .confirm-dialog {
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 32px 64px rgba(43, 27, 14, 0.18);
+            padding: 1.6rem 1.8rem;
+            max-width: 22rem;
+            width: calc(100% - 2rem);
+            text-align: center;
+            animation: scaleIn 0.18s ease;
+        }
+
+        .confirm-dialog p {
+            margin: 0 0 1.25rem;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .confirm-dialog .confirm-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
         .site-footer {
             padding: 2.2rem 0 2.8rem;
             color: var(--ink-muted);
@@ -645,14 +729,14 @@
 <body>
     <header class="site-header">
         <div class="wrap">
-            <h1 class="brand-title"><a href="{{ route('tasks.index') }}">Планировщик задач</a></h1>
+            <h1 class="brand-title"><a href="{{ route('tasks.index') }}"><img src="{{ asset('logo.png') }}" class="brand-logo" alt="Осьминог в каске жонглирует горящими задачами" width="96" height="56">Планировщик задач</a></h1>
         </div>
     </header>
 
     <main>
         <div class="wrap">
             @if(session('success'))
-                <div class="flash">{{ session('success') }}</div>
+                <div class="flash" role="status">{{ session('success') }}</div>
             @endif
 
             @yield('content')
@@ -664,5 +748,61 @@
     </footer>
 
     @stack('scripts')
+    <script>
+        document.addEventListener('submit', (e) => {
+            const trigger = e.target.querySelector('[data-confirm]') ?? e.target.closest('[data-confirm]');
+
+            if (!trigger) {
+                return;
+            }
+
+            const message = trigger.dataset.confirm;
+
+            if (document.querySelector('.confirm-overlay')) {
+                return;
+            }
+
+            e.preventDefault();
+
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.setAttribute('role', 'alertdialog');
+            overlay.setAttribute('aria-modal', 'true');
+            overlay.setAttribute('aria-label', message);
+            overlay.innerHTML =
+                '<div class="confirm-dialog">' +
+                    '<p>' + message.replace(/</g, '&lt;') + '</p>' +
+                    '<div class="confirm-actions">' +
+                        '<button type="button" class="btn btn-danger" data-confirm-yes>Да, удалить</button>' +
+                        '<button type="button" class="btn btn-secondary" data-confirm-no>Отмена</button>' +
+                    '</div>' +
+                '</div>';
+
+            document.body.appendChild(overlay);
+            overlay.querySelector('[data-confirm-no]').focus();
+
+            const close = () => overlay.remove();
+
+            overlay.querySelector('[data-confirm-yes]').addEventListener('click', () => {
+                close();
+                trigger.removeAttribute('data-confirm');
+                e.target.requestSubmit();
+            });
+
+            overlay.querySelector('[data-confirm-no]').addEventListener('click', close);
+
+            overlay.addEventListener('click', (ev) => {
+                if (ev.target === overlay) {
+                    close();
+                }
+            });
+
+            overlay.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Escape') {
+                    close();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
