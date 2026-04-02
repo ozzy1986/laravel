@@ -6,6 +6,7 @@ use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class Task extends Model
 {
@@ -31,10 +32,23 @@ class Task extends Model
 
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
-        if ($term) {
+        $term = trim((string) $term);
+
+        if ($term !== '') {
             $query->where('title', 'like', '%' . $term . '%');
         }
 
         return $query;
+    }
+
+    public function excerpt(int $limit = 150): ?string
+    {
+        $description = trim((string) $this->description);
+
+        if ($description === '') {
+            return null;
+        }
+
+        return Str::limit(preg_replace('/\s+/u', ' ', $description) ?? $description, $limit);
     }
 }

@@ -32,6 +32,19 @@ class TaskCrudTest extends TestCase
         $response->assertSee('Задач пока нет');
     }
 
+    public function test_index_shows_description_excerpt_when_available(): void
+    {
+        Task::factory()->create([
+            'title' => 'Quoted task',
+            'description' => 'Это достаточно длинное описание, чтобы убедиться, что в списке задач появляется короткая цитата из текста.',
+        ]);
+
+        $response = $this->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSee('короткая цитата');
+    }
+
     // ── Show ────────────────────────────────────────────────
 
     public function test_show_displays_single_task(): void
@@ -210,15 +223,40 @@ class TaskCrudTest extends TestCase
         $response->assertDontSee('Deploy server');
     }
 
+    public function test_ajax_index_returns_partial_html_for_live_filters(): void
+    {
+        Task::factory()->create(['title' => 'Buy groceries']);
+        Task::factory()->create(['title' => 'Deploy server']);
+
+        $response = $this->get(route('tasks.index', ['search' => 'groceries']), [
+            'Accept' => 'application/json',
+            'X-Requested-With' => 'XMLHttpRequest',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonStructure(['html', 'total']);
+
+        $this->assertStringContainsString('Buy groceries', $response->json('html'));
+        $this->assertStringNotContainsString('Deploy server', $response->json('html'));
+    }
+
     // ── Pagination ──────────────────────────────────────────
 
-    public function test_index_paginates_results(): void
+    public function test_index_paginates_results_by_six_items_per_page(): void
     {
-        Task::factory()->count(20)->create();
+        foreach (range(1, 7) as $number) {
+            Task::factory()->create([
+                'title' => "Task {$number}",
+                'created_at' => now()->subMinutes(8 - $number),
+                'updated_at' => now()->subMinutes(8 - $number),
+            ]);
+        }
 
         $response = $this->get(route('tasks.index'));
 
         $response->assertOk();
+        $response->assertSee('Task 7');
+        $response->assertDontSee('Task 1');
         $response->assertSee('page=2');
     }
 
