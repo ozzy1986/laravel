@@ -1,19 +1,17 @@
 @if($tasks->count() > 0)
     <p class="results-summary">
-        Показаны задачи с {{ $tasks->firstItem() }} по {{ $tasks->lastItem() }} из {{ $tasks->total() }}.
+        {{ $tasks->firstItem() }}–{{ $tasks->lastItem() }} из {{ $tasks->total() }}
     </p>
 @endif
 
 @forelse($tasks as $task)
-    <article class="card">
+    <a href="{{ route('tasks.show', $task) }}" class="card task-card {{ $task->status->stripeClass() }}">
         <div class="card-heading">
             <div>
-                <h3 class="card-title">
-                    <a href="{{ route('tasks.show', $task) }}">{{ $task->title }}</a>
-                </h3>
+                <h3 class="card-title">{{ $task->title }}</h3>
                 <div class="card-meta">
                     <span class="status-chip {{ $task->status->color() }}">{{ $task->status->label() }}</span>
-                    <span>{{ $task->created_at->format('d.m.y') }}</span>
+                    <time datetime="{{ $task->created_at->toIso8601String() }}">{{ $task->created_at->format('d.m.y H:i') }}</time>
                 </div>
             </div>
             <span class="card-stamp">#{{ str_pad((string) $task->id, 3, '0', STR_PAD_LEFT) }}</span>
@@ -22,7 +20,7 @@
         @if($task->excerpt())
             <blockquote class="task-quote">«{{ $task->excerpt() }}»</blockquote>
         @endif
-    </article>
+    </a>
 @empty
     <div class="card empty-state">
         <span class="empty-mark">00</span>
@@ -33,10 +31,10 @@
 
 @if($tasks->hasPages())
     <p class="pagination-summary">
-        Страница {{ $tasks->currentPage() }} из {{ $tasks->lastPage() }}
+        {{ $tasks->currentPage() }} / {{ $tasks->lastPage() }}
     </p>
 
-    <nav class="pagination-wrap" aria-label="Навигация по страницам">
+    <nav class="pagination-wrap" aria-label="Страницы">
         @if($tasks->onFirstPage())
             <span class="disabled">&laquo;</span>
         @else

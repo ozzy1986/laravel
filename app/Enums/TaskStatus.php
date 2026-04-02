@@ -25,4 +25,14 @@ enum TaskStatus: string
             self::Done       => 'status-done',
         };
     }
+
+    /** CSS class for the left stripe gradient on list cards */
+    public function stripeClass(): string
+    {
+        return match ($this) {
+            self::New        => 'card--stripe-new',
+            self::InProgress => 'card--stripe-progress',
+            self::Done       => 'card--stripe-done',
+        };
+    }
 }

@@ -3,9 +3,7 @@
 @section('title', 'Новая задача')
 
 @section('content')
-    <p class="section-kicker">Новая запись</p>
     <h2 class="page-title page-title-tight">Новая задача</h2>
-    <p class="page-lead" style="margin-bottom: 1.2rem;">Короткое название, понятный статус и при желании пара строк контекста.</p>
 
     <div class="card">
         <form method="POST" action="{{ route('tasks.store') }}">

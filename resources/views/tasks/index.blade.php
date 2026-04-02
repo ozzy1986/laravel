@@ -4,14 +4,10 @@
 
 @section('content')
     <section class="page-hero">
-        <div>
-            <p class="section-kicker">Список задач</p>
-            <h2 class="page-title page-title-tight">Дела, которые не растворяются в шуме</h2>
-            <p class="page-lead">Фиксируйте мысль, держите короткий контекст под рукой и мгновенно сужайте список без перезагрузки страницы.</p>
-        </div>
+        <h2 class="page-title page-title-tight">Задачи</h2>
         <aside class="hero-stat panel panel-soft">
             <span class="hero-stat-value" data-results-total>{{ $tasks->total() }}</span>
-            <span class="hero-stat-label">всего задач</span>
+            <span class="hero-stat-label">всего</span>
         </aside>
     </section>
 
@@ -141,7 +137,7 @@
 
                 requestController = new AbortController();
 
-                setLoadingState(true, 'Обновляем список…');
+                setLoadingState(true, '');
 
                 fetch(urlString, {
                     headers: {
@@ -164,7 +160,7 @@
                         }
                         window.history.replaceState({}, '', urlString);
                         syncResetLinkState();
-                        setLoadingState(false, 'Список обновлён.');
+                        setLoadingState(false, '');
                         scheduleStatusClear();
                     })
                     .catch((error) => {

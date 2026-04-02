@@ -93,27 +93,12 @@
             z-index: 2;
         }
 
-        .brand-bar {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 1.25rem;
-            align-items: end;
-        }
-
-        .brand-kicker,
         .section-kicker {
             margin: 0 0 0.45rem;
             text-transform: uppercase;
             letter-spacing: 0.24em;
             font-size: 0.72rem;
             font-weight: 700;
-        }
-
-        .brand-kicker {
-            color: rgba(247, 241, 232, 0.62);
-        }
-
-        .section-kicker {
             color: var(--accent);
         }
 
@@ -129,14 +114,6 @@
             text-decoration: none;
         }
 
-        .brand-note {
-            max-width: 18rem;
-            margin: 0;
-            text-align: right;
-            color: rgba(247, 241, 232, 0.74);
-            font-size: 0.93rem;
-        }
-
         main {
             padding: 2.1rem 0 4rem;
             position: relative;
@@ -149,6 +126,10 @@
             gap: 1rem 1.5rem;
             align-items: end;
             margin-bottom: 1.4rem;
+        }
+
+        .page-hero > .page-title {
+            margin-bottom: 0;
         }
 
         .page-title {
@@ -377,16 +358,45 @@
             margin-bottom: 1rem;
         }
 
-        .card::before {
+        a.card.task-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        a.card.task-card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .card.task-card::before {
             content: '';
             position: absolute;
             inset: 0 auto 0 0;
             width: 4px;
-            background: linear-gradient(180deg, rgba(159, 85, 54, 0.86), rgba(53, 93, 149, 0.46));
+            border-radius: 2px 0 0 2px;
         }
 
-        .card:hover {
+        .card.task-card.card--stripe-new::before {
+            background: linear-gradient(180deg, #d4a84a, #8f6a1c);
+        }
+
+        .card.task-card.card--stripe-progress::before {
+            background: linear-gradient(180deg, #4a72b8, #2a4a7a);
+        }
+
+        .card.task-card.card--stripe-done::before {
+            background: linear-gradient(180deg, #3d9a6c, #236542);
+        }
+
+        .card:not(.task-card):hover {
             transform: translateY(-2px);
+        }
+
+        .card.task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 26px 52px rgba(43, 27, 14, 0.11);
         }
 
         .card-heading {
@@ -402,19 +412,6 @@
             font-size: 1.25rem;
             line-height: 1.2;
             letter-spacing: -0.02em;
-        }
-
-        .card-title a {
-            text-decoration: none;
-            background-image: linear-gradient(currentColor, currentColor);
-            background-repeat: no-repeat;
-            background-position: 0 100%;
-            background-size: 0 1px;
-            transition: background-size 0.22s ease;
-        }
-
-        .card-title a:hover {
-            background-size: 100% 1px;
         }
 
         .card-stamp {
@@ -466,10 +463,22 @@
         .task-quote {
             margin: 1rem 0 0;
             padding: 0.15rem 0 0.15rem 1rem;
-            border-left: 2px solid rgba(159, 85, 54, 0.24);
+            border-left: 2px solid rgba(98, 76, 58, 0.2);
             color: var(--ink-muted);
             font-size: 0.96rem;
             font-style: italic;
+        }
+
+        .task-card.card--stripe-new .task-quote {
+            border-left-color: rgba(181, 124, 36, 0.45);
+        }
+
+        .task-card.card--stripe-progress .task-quote {
+            border-left-color: rgba(53, 93, 149, 0.45);
+        }
+
+        .task-card.card--stripe-done .task-quote {
+            border-left-color: rgba(47, 123, 88, 0.45);
         }
 
         .empty-state {
@@ -593,15 +602,9 @@
         }
 
         @media (max-width: 760px) {
-            .brand-bar,
             .page-hero,
             .toolbar {
                 grid-template-columns: 1fr;
-            }
-
-            .brand-note {
-                max-width: none;
-                text-align: left;
             }
 
             .toolbar-heading {
@@ -635,12 +638,8 @@
 </head>
 <body>
     <header class="site-header">
-        <div class="wrap brand-bar">
-            <div>
-                <p class="brand-kicker">Порядок без шума</p>
-                <h1 class="brand-title"><a href="{{ route('tasks.index') }}">Планировщик задач</a></h1>
-            </div>
-            <p class="brand-note">Спокойный интерфейс для дел, заметок и коротких решений на день.</p>
+        <div class="wrap">
+            <h1 class="brand-title"><a href="{{ route('tasks.index') }}">Планировщик задач</a></h1>
         </div>
     </header>
 
@@ -655,7 +654,7 @@
     </main>
 
     <footer class="site-footer">
-        <div class="wrap">&copy; {{ date('Y') }} Планировщик задач</div>
+        <div class="wrap">&copy; {{ date('Y') }}</div>
     </footer>
 
     @stack('scripts')

@@ -3,9 +3,7 @@
 @section('title', 'Редактирование задачи')
 
 @section('content')
-    <p class="section-kicker">Обновление записи</p>
-    <h2 class="page-title page-title-tight">Редактирование задачи</h2>
-    <p class="page-lead" style="margin-bottom: 1.2rem;">Скорректируйте текст, статус или описание без лишнего визуального шума.</p>
+    <h2 class="page-title page-title-tight">Редактирование</h2>
 
     <div class="card">
         <form method="POST" action="{{ route('tasks.update', $task) }}">

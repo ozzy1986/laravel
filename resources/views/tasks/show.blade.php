@@ -4,15 +4,14 @@
 
 @section('content')
     <div class="task-detail">
-        <p class="section-kicker">Карточка задачи</p>
         <h2 class="page-title page-title-tight">{{ $task->title }}</h2>
 
         <div class="card">
             <div class="meta-bar">
                 <span class="status-chip {{ $task->status->color() }}">{{ $task->status->label() }}</span>
-                <span>Создана: {{ $task->created_at->format('d.m.y') }}</span>
+                <span>Создана: {{ $task->created_at->format('d.m.y H:i') }}</span>
                 @if($task->updated_at->gt($task->created_at))
-                    <span>Обновлена: {{ $task->updated_at->format('d.m.y') }}</span>
+                    <span>Обновлена: {{ $task->updated_at->format('d.m.y H:i') }}</span>
                 @endif
             </div>
 
