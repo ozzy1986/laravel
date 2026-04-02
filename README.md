@@ -1,58 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Планировщик задач (Laravel)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Веб-приложение «список задач» на русском языке: CRUD, статусы, поиск по названию и описанию, фильтр по статусу, пагинация. Интерфейс — Blade + встроенные стили в layout, без отдельного SPA.
 
-## About Laravel
+## Стек
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **PHP** ≥ 8.3, **Laravel** 13
+- **БД:** MySQL в проде; локально и в тестах обычно SQLite (`phpunit.xml` задаёт `DB_DATABASE=:memory:`)
+- **Тесты:** PHPUnit (`tests/Feature/TaskCrudTest.php` и др.)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Карта проекта (что за что отвечает)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Путь | Назначение |
+|------|------------|
+| [`routes/web.php`](routes/web.php) | Маршруты: редирект `/` → `/tasks`, ресурс `tasks` (все действия CRUD). |
+| [`app/Http/Controllers/TaskController.php`](app/Http/Controllers/TaskController.php) | Список (фильтр, поиск, пагинация 6 на страницу), создание/просмотр/редактирование/удаление. Для AJAX-запросов к индексу (`X-Requested-With: XMLHttpRequest`, `Accept: application/json`) возвращает JSON `{ html, total }` — HTML фрагмента списка без полной перезагрузки. |
+| [`app/Http/Requests/TaskRequest.php`](app/Http/Requests/TaskRequest.php) | Общая валидация для `store` и `update` (title, description, status). |
+| [`app/Models/Task.php`](app/Models/Task.php) | Модель задачи; скоупы `filterStatus`, `search` (заголовок **или** описание); метод `excerpt()` для превью в списке. |
+| [`app/Enums/TaskStatus.php`](app/Enums/TaskStatus.php) | Статусы: `new`, `in_progress`, `done` — подписи для UI, классы чипов, класс цветной полоски карточки. |
+| [`database/migrations/`](database/migrations) | Таблица `tasks` и стандартные миграции Laravel. |
+| [`database/factories/TaskFactory.php`](database/factories/TaskFactory.php) | Фабрика для тестов и сидов. |
+| [`resources/views/layouts/app.blade.php`](resources/views/layouts/app.blade.php) | Общий layout: шапка, стили, футер, стек `@stack('scripts')`. |
+| [`resources/views/tasks/`](resources/views/tasks) | Страницы: `index`, `create`, `edit`, `show`, частичные `_form`, `_results` (только тело списка + пагинация для AJAX). |
+| [`public/favicon.png`](public/favicon.png) | Иконка сайта. |
+| [`tests/Feature/TaskCrudTest.php`](tests/Feature/TaskCrudTest.php) | Основные сценарии: CRUD, валидация, фильтр, поиск (в т.ч. по описанию), AJAX-индекс, пагинация. |
 
-## Learning Laravel
+Пользователи Laravel по умолчанию (`User`) в миграциях есть, в этом приложении **не используются** (нет авторизации).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Локальный запуск
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. `composer install`
+2. Скопировать окружение: `cp .env.example .env` (или вручную), затем `php artisan key:generate`
+3. Настроить `DB_*` в `.env` (для SQLite: `DB_CONNECTION=sqlite`, путь к файлу в `config/database.php` по умолчанию `database/database.sqlite`, создать файл: `touch database/database.sqlite`)
+4. `php artisan migrate`
+5. `php artisan serve` — приложение по адресу из вывода команды
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Фронтенд-сборка Vite в проекте есть, но **основной UI не зависит от сборки** (стили в Blade). `npm run build` нужен, если меняют `resources/css` / `resources/js` под Vite.
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Тесты
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+php artisan test
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+В `phpunit.xml` для тестов заданы `APP_ENV=testing`, SQLite in-memory и отключены лишние сервисы — **не полагайтесь на продовый `.env` в тестах**.
 
-## Contributing
+## Переменные окружения
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Не коммитьте** `.env` (в `.gitignore`).
+- На проде: свой `APP_KEY`, `APP_URL`, настройки БД, при необходимости `APP_DEBUG=false`.
+- После деплоя кода обычно: `php artisan migrate --force`, затем `php artisan config:cache`, `route:cache`, `view:cache` (и `optimize:clear` при смене конфига).
 
-## Code of Conduct
+## Поведение списка задач (индекс)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Обычный GET `/tasks` — полная страница.
+- Запрос с заголовками `X-Requested-With: XMLHttpRequest` и `Accept: application/json` — ответ JSON с полем `html` (рендер `tasks._results`) и `total` (число записей с учётом фильтров) для обновления списка без перезагрузки. JS лежит в [`resources/views/tasks/index.blade.php`](resources/views/tasks/index.blade.php) в `@push('scripts')`.
 
-## Security Vulnerabilities
+## Расширение функционала
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Новые поля задачи: миграция → `$fillable` / casts в `Task` → `TaskRequest` → Blade-формы → тесты.
+- Новые статусы: только `TaskStatus` + миграция при смене хранения (если нужно) + подписи/стили в enum и CSS.
+- API отдельно от Blade: завести `routes/api.php` и контроллеры/ресурсы, не смешивать с текущими web-маршрутами без необходимости.
 
-## License
+## Лицензия
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Каркас Laravel — см. репозиторий [laravel/laravel](https://github.com/laravel/laravel); код приложения — по договорённости с владельцем репозитория.
