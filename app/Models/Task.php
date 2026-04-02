@@ -35,15 +35,21 @@ class Task extends Model
         $term = trim((string) $term);
 
         if ($term !== '') {
-            $like = '%' . $term . '%';
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term);
+            $like = '%' . $escaped . '%';
 
             $query->where(function (Builder $inner) use ($like): void {
-                $inner->where('title', 'like', $like)
-                    ->orWhere('description', 'like', $like);
+                $inner->whereRaw('title LIKE ? ESCAPE ?', [$like, '\\'])
+                    ->orWhereRaw('description LIKE ? ESCAPE ?', [$like, '\\']);
             });
         }
 
         return $query;
+    }
+
+    public function formattedId(): string
+    {
+        return '#' . str_pad((string) $this->id, 3, '0', STR_PAD_LEFT);
     }
 
     public function excerpt(int $limit = 150): ?string

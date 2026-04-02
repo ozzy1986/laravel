@@ -278,6 +278,85 @@ class TaskCrudTest extends TestCase
         $response->assertSee('page=2');
     }
 
+    // ── Combined filters ────────────────────────────────────
+
+    public function test_index_combines_status_filter_and_search(): void
+    {
+        Task::factory()->create(['title' => 'Buy milk', 'status' => 'new']);
+        Task::factory()->create(['title' => 'Buy bread', 'status' => 'done']);
+        Task::factory()->create(['title' => 'Fix bug', 'status' => 'new']);
+
+        $response = $this->get(route('tasks.index', [
+            'status' => 'new',
+            'search' => 'Buy',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Buy milk');
+        $response->assertDontSee('Buy bread');
+        $response->assertDontSee('Fix bug');
+    }
+
+    // ── Validation edge cases ───────────────────────────────
+
+    public function test_store_trims_title_whitespace(): void
+    {
+        $this->post(route('tasks.store'), [
+            'title'  => '  Clean title  ',
+            'status' => 'new',
+        ]);
+
+        $this->assertDatabaseHas('tasks', ['title' => 'Clean title']);
+    }
+
+    public function test_store_fails_with_whitespace_only_title(): void
+    {
+        $response = $this->post(route('tasks.store'), [
+            'title'  => '   ',
+            'status' => 'new',
+        ]);
+
+        $response->assertSessionHasErrors('title');
+        $this->assertDatabaseCount('tasks', 0);
+    }
+
+    public function test_store_rejects_description_exceeding_max_length(): void
+    {
+        $response = $this->post(route('tasks.store'), [
+            'title'       => 'Valid title',
+            'description' => str_repeat('a', 5001),
+            'status'      => 'new',
+        ]);
+
+        $response->assertSessionHasErrors('description');
+    }
+
+    // ── XSS safety ──────────────────────────────────────────
+
+    public function test_xss_payload_in_title_is_escaped_in_listing(): void
+    {
+        Task::factory()->create([
+            'title' => '<script>alert("xss")</script>',
+        ]);
+
+        $response = $this->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSee('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;', false);
+    }
+
+    public function test_xss_payload_in_description_is_escaped_on_show(): void
+    {
+        $task = Task::factory()->create([
+            'description' => '<img src=x onerror=alert(1)>',
+        ]);
+
+        $response = $this->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSee('&lt;img src=x onerror=alert(1)&gt;', false);
+    }
+
     // ── Homepage redirect ───────────────────────────────────
 
     public function test_homepage_redirects_to_tasks(): void

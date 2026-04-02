@@ -14,7 +14,7 @@
                     <time datetime="{{ $task->created_at->toIso8601String() }}">{{ $task->created_at->format('d.m.y H:i') }}</time>
                 </div>
             </div>
-            <span class="card-stamp">#{{ str_pad((string) $task->id, 3, '0', STR_PAD_LEFT) }}</span>
+            <span class="card-stamp">{{ $task->formattedId() }}</span>
         </div>
 
         @if($task->excerpt())

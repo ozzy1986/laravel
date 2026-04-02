@@ -594,6 +594,12 @@
             gap: 0.55rem;
         }
 
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
         .site-footer {
             padding: 2.2rem 0 2.8rem;
             color: var(--ink-muted);

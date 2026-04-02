@@ -10,7 +10,7 @@
             @csrf
             @method('PUT')
             @include('tasks._form')
-            <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Сохранить</button>
                 <a href="{{ route('tasks.show', $task) }}" class="btn btn-secondary">Отмена</a>
             </div>
