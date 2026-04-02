@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" type="image/png" href="{{ asset('favicon-chaos-v2.png') }}" sizes="32x32">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('favicon-chaos-v2.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('favicon-chaos-v2.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon-chaos-v3.png') }}" sizes="32x32">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon-chaos-v3.png') }}">
     <title>@yield('title', 'Задачи') — Планировщик</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -730,7 +730,7 @@
 <body>
     <header class="site-header">
         <div class="wrap">
-            <h1 class="brand-title"><a href="{{ route('tasks.index') }}"><img src="{{ asset('logo.png') }}" class="brand-logo" alt="Осьминог в каске жонглирует горящими задачами" width="96" height="56">Планировщик задач</a></h1>
+            <h1 class="brand-title"><a href="{{ route('tasks.index') }}"><img src="{{ asset('logo-chaos-v2.png') }}" class="brand-logo" alt="Осьминог в каске жонглирует горящими задачами" width="87" height="71">Планировщик задач</a></h1>
         </div>
     </header>
 

@@ -21,7 +21,7 @@
 | [`database/factories/TaskFactory.php`](database/factories/TaskFactory.php) | Фабрика для тестов и сидов. |
 | [`resources/views/layouts/app.blade.php`](resources/views/layouts/app.blade.php) | Общий layout: шапка, стили, футер, стек `@stack('scripts')`. |
 | [`resources/views/tasks/`](resources/views/tasks) | Страницы: `index`, `create`, `edit`, `show`, частичные `_form`, `_results` (только тело списка + пагинация для AJAX). |
-| [`public/favicon.png`](public/favicon.png) | Иконка сайта. |
+| [`public/favicon.ico`](public/favicon.ico) и [`public/favicon-chaos-v3.png`](public/favicon-chaos-v3.png) | Актуальные иконки сайта; [`public/logo-chaos-v2.png`](public/logo-chaos-v2.png) используется в шапке. |
 | [`tests/Feature/TaskCrudTest.php`](tests/Feature/TaskCrudTest.php) | Основные сценарии: CRUD, валидация, фильтр, поиск по названию, AJAX-индекс, пагинация. |
 
 Пользователи Laravel по умолчанию (`User`) в миграциях есть, в этом приложении **не используются** (нет авторизации).
